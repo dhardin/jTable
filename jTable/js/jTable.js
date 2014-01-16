@@ -19,8 +19,8 @@ var jTable = (function ($) {
     },
     stateMap = { $container: null },
     jqueryMap = {},
-    setJqueryMap, onClick, onDoubleClick,
-    objectCreate, extendObject,
+    setJqueryMap, onClick, onDoubleClick, onBlur,
+    objectCreate, extendObject, addSelectEdit,
     publicMethod, initModule;
     //------------------- BEGIN UTILITY METHODS ------------------
     // ** Utility function to set inheritance
@@ -51,12 +51,15 @@ var jTable = (function ($) {
         var $container = stateMap.$container;
         jqueryMap.$container = $container;
     };
+
+    addSelectEdit = function () {
+    };
     // end dom method /setJqueryMap/
     //---------------------- END DOM METHODS ---------------------
     //------------------- BEGIN EVENT HANDLERS -------------------
     // Begin Event handler /onClick/
     onClick = function (e) {
-        e.preventDefault();
+      
         var row_highlight_class = configMap.row_highlight_class;
         jqueryMap.$container.find('.' + row_highlight_class).removeClass(row_highlight_class);
         $(this).siblings().andSelf().addClass(row_highlight_class);
@@ -65,7 +68,7 @@ var jTable = (function ($) {
 
     // Begin Event handler /onDoubleClick/
     onDoubleClick = function (e) {
-        e.preventDefault();
+       
         var $td = $(this),
         cell_edit_class = configMap.cell_edit_class,
         $prevEditDiv = jqueryMap.$container.find('.' + cell_edit_class);
@@ -74,9 +77,25 @@ var jTable = (function ($) {
         $prevEditDiv.parent().html($prevEditDiv.html());
 
         $td.html('<div contenteditable class="' + cell_edit_class + '">' + $td.html() + '</div>');
-        $td.focus();
+        $td.find('.' + cell_edit_class).focus();
     };
     // End Event handler /onDoubleClick/
+
+    // Begin Event handler /onBlur/
+    onBlur = function (e) {
+        
+        var cell_edit_class = configMap.cell_edit_class,
+        $this = $(this),
+        $prevEditDiv = $this.find('.' + cell_edit_class);
+        
+        if (typeof $prevEditDiv !== "undefined")
+        {
+            $this.html($prevEditDiv.html());
+        }
+
+    };
+    // End Event handler /onBlur/
+
     //-------------------- END EVENT HANDLERS --------------------
     // Begin public method /configModule/
     // Purpose : Adjust configuration of allowed keys
@@ -113,6 +132,9 @@ var jTable = (function ($) {
 
             jqueryMap.$container.find("td")
             .on('dblclick', onDoubleClick);
+
+            jqueryMap.$container.find('td')
+            .on('focusout', onBlur);
 
             return true;
         }
