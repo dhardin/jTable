@@ -59,7 +59,7 @@ var jTable = (function ($) {
     //------------------- BEGIN EVENT HANDLERS -------------------
     // Begin Event handler /onClick/
     onClick = function (e) {
-      
+
         var row_highlight_class = configMap.row_highlight_class;
         jqueryMap.$container.find('.' + row_highlight_class).removeClass(row_highlight_class);
         $(this).siblings().andSelf().addClass(row_highlight_class);
@@ -68,28 +68,29 @@ var jTable = (function ($) {
 
     // Begin Event handler /onDoubleClick/
     onDoubleClick = function (e) {
-       
-        var $td = $(this),
+        e.preventDefault();
+        var $this = $(this),
         cell_edit_class = configMap.cell_edit_class,
         $prevEditDiv = jqueryMap.$container.find('.' + cell_edit_class);
 
+        if ($prevEditDiv.length > 0) {
+            $prevEditDiv.parent().html($prevEditDiv.html());
+        }
 
-        $prevEditDiv.parent().html($prevEditDiv.html());
-
-        $td.html('<div contenteditable class="' + cell_edit_class + '">' + $td.html() + '</div>');
-        $td.find('.' + cell_edit_class).focus();
+        $this.html('<div contenteditable class="' + cell_edit_class + '">' + $this.html() + '</div>');
+        $this.find('.' + cell_edit_class).focus();
+       
     };
     // End Event handler /onDoubleClick/
 
     // Begin Event handler /onBlur/
     onBlur = function (e) {
-        
+
         var cell_edit_class = configMap.cell_edit_class,
         $this = $(this),
         $prevEditDiv = $this.find('.' + cell_edit_class);
-        
-        if (typeof $prevEditDiv !== "undefined")
-        {
+
+        if ($prevEditDiv.length > 0) {
             $this.html($prevEditDiv.html());
         }
 
@@ -133,7 +134,7 @@ var jTable = (function ($) {
             jqueryMap.$container.find("td")
             .on('dblclick', onDoubleClick);
 
-            jqueryMap.$container.find('td')
+            jqueryMap.$container.find('.' + configMap.cell_edit_class)
             .on('focusout', onBlur);
 
             return true;
