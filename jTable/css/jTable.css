@@ -56,8 +56,45 @@ strong
     color: #000;
 }
 
-.jTable-Edit
+.jTable-Edit-Cell
 {
     background-color: #aaa;
     color: #000;
+}
+
+.jTable-options
+{
+    text-align: right;
+}
+
+.jTable-edit, .jTable-save, .jTable-cancel
+{
+    cursor: pointer;
+    color: #0000aa;
+    font-size: 2em;
+    padding: 0 5px 0 5px
+}
+/** Default rendering of save and cancel elements **/
+.jTable-save, .jTable-cancel
+{
+    display: none;
+}
+
+
+
+.jTable-main
+{
+    position: absolute;
+    top: 200;
+    left: 40%;
+}
+
+td
+{
+    padding: 5px;
+}
+
+table
+{
+        font-size: 5em !important;
 }
