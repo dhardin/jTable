@@ -47,7 +47,9 @@ var jTable = (function ($) {
     objectCreate, extendObject, addSelectEdit,
     addDropDown, addDropDownValues, addEditiableDiv,
     getEditValue, toggleEdit, makeEditTable,
-    removeEditTable, initModule;
+    removeEditTable, makeCell, initModule;
+
+
     //------------------- BEGIN UTILITY METHODS ------------------
     // ** Utility function to set inheritance
     // Cross-browser method to inherit Object.create()
@@ -169,14 +171,18 @@ var jTable = (function ($) {
          ;
 
         $table.find('td').each(function () {
-            var $this = $(this);
-            $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $this.text()) : addEditiableDiv($this.html()));
+            var 
+                $this = $(this),
+                $text = $this.text()
+            ;
+            $this.data("contents", $text);
+            $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $text) : addEditiableDiv($this.html()));
         });
     };
     // End dom method /makeEditTable/
 
     // Begin dom method /removeEditTable/
-    removeEditTable = function ($table) {
+    removeEditTable = function ($table, save) {
         var 
             cell_edit_class = configMap.cell_edit_class,
             $prevEditDiv = jqueryMap.$contents.find('.' + cell_edit_class)
@@ -184,7 +190,12 @@ var jTable = (function ($) {
 
         $prevEditDiv.each(function () {
             var $this = $(this);
-            $this.parent().html(getEditValue($this));
+            if (save) {
+                $this.parent().html(getEditValue($this));
+            }
+            else {
+                $this.parent().html($this.parent().data("contents"));
+            }
         });
     };
     // End dom method /removeEditTable/
@@ -248,14 +259,14 @@ var jTable = (function ($) {
     // Begin Event handler /onClickSave/
     onClickSave = function (e) {
         toggleEdit();
-        removeEditTable(jqueryMap.$table);
+        removeEditTable(jqueryMap.$table, true);
     }
     // End Event handler /onClickSave/
 
     // Begin Event handler /onClickCancel/
     onClickCancel = function (e) {
         toggleEdit();
-        removeEditTable(jqueryMap.$table);
+        removeEditTable(jqueryMap.$table, false);
     }
     // End Event handler /onClickCancel/
 
