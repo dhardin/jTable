@@ -15,6 +15,17 @@
                          ]
                             });
         jTable.initModule($('#jTable'));
+
+        var $t = $('<div/>');
+
+        $.gevent.subscribe($t, 'jTable-saved', function (event, cellsChanged) {
+            var
+                index = 0
+            ;
+            for (index = 0; index < cellsChanged.length; index++) {
+                console.log(index + ": " + cellsChanged[index].text());
+            }
+        });
     });
 </script>
 <style>

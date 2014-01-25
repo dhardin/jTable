@@ -12,10 +12,12 @@
 
 
 var jTable = (function ($) {
-    //----------------- END MODULE SCOPE VARIABLES ---------------
+    'use strict'
+    //----------------- BEGIN MODULE SCOPE VARIABLES ---------------
     var configMap = {
         row_highlight_class: 'jTable-Row',
         cell_edit_class: 'jTable-Edit-Cell',
+        cell_edited_class: 'jTable-edited',
         main_HTML: String()
                 + '<div class="jTable-main">'
                     + '<div class="jTable-options">'
@@ -39,17 +41,18 @@ var jTable = (function ($) {
     stateMap = {
         $table         : null,
         $container     : null,
-        is_edit_enabled: false
+        is_edit_enabled: false,
+        cells_edited   : []
     },
     jqueryMap = {},
     setJqueryMap, onClick, onDoubleClick, onBlur,
-    onClickEdit, onClickSave, onClickCancel,
+    onChange, onClickEdit, onClickSave, onClickCancel,
     objectCreate, extendObject, addSelectEdit,
     addDropDown, addDropDownValues, addEditiableDiv,
     getEditValue, toggleEdit, makeEditTable,
-    removeEditTable, makeCell, initModule;
+    removeEditTable, makeCell, configModule, initModule;
 
-
+    //----------------- END MODULE SCOPE VARIABLES ---------------
     //------------------- BEGIN UTILITY METHODS ------------------
     // ** Utility function to set inheritance
     // Cross-browser method to inherit Object.create()
@@ -186,6 +189,9 @@ var jTable = (function ($) {
             cell_edit_class = configMap.cell_edit_class,
             $prevEditDiv = jqueryMap.$contents.find('.' + cell_edit_class)
         ;
+        
+        //remove edit class from all changed cells
+        $('.' + configMap.cell_edited_class).removeClass('.' + configMap.cell_edited_class);
 
         $prevEditDiv.each(function () {
             var $this = $(this);
@@ -250,8 +256,17 @@ var jTable = (function ($) {
     };
     // End Event handler /onBlur/
 
+    // Begin Event handler /onChange/
+    onChange = function () {
+        var $this = $(this);
+        $this.addClass(configMap.cell_edited_class);
+        stateMap.cells_edited.push($this)
+    }
+    // End Event handler /onChange/
+
     // Begin Event handler /onClickEdit/
     onClickEdit = function (e) {
+        stateMap.cells_edited = [];
         toggleEdit();
         makeEditTable(jqueryMap.$table);
     };
@@ -261,6 +276,7 @@ var jTable = (function ($) {
     onClickSave = function (e) {
         toggleEdit();
         removeEditTable(jqueryMap.$table, true);
+        $.gevent.publish('jTable-saved', [stateMap.cells_edited])
     };
     // End Event handler /onClickSave/
 
@@ -282,6 +298,7 @@ var jTable = (function ($) {
     // Throws : none
     //
     configModule = function (settings_map) {
+        var setting;
         for (setting in settings_map) {
             if (settingsMap.hasOwnProperty(setting)) {
                 settingsMap[setting] = settings_map[setting];
@@ -314,7 +331,11 @@ var jTable = (function ($) {
             setJqueryMap();
 
             jqueryMap.$table.find("td")
-            .on('click', onClick);
+            .on('click', onClick)
+
+
+            jqueryMap.$table.find("td:not(." + configMap.cell_edited_class + ")")
+            .on('change', onChange);
 
             //            jqueryMap.$contents.find("td")
             //            .on('dblclick', onDoubleClick);
