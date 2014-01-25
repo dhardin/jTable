@@ -191,7 +191,7 @@ var jTable = (function ($) {
         ;
         
         //remove edit class from all changed cells
-        $('.' + configMap.cell_edited_class).removeClass('.' + configMap.cell_edited_class);
+        $('.' + configMap.cell_edited_class).removeClass(configMap.cell_edited_class);
 
         $prevEditDiv.each(function () {
             var $this = $(this);
@@ -258,9 +258,12 @@ var jTable = (function ($) {
 
     // Begin Event handler /onChange/
     onChange = function () {
+        
         var $this = $(this);
-        $this.addClass(configMap.cell_edited_class);
-        stateMap.cells_edited.push($this)
+        if (!$this.hasClass(configMap.cell_edited_class)) {
+            $this.addClass(configMap.cell_edited_class);
+            stateMap.cells_edited.push($this)
+        }
     }
     // End Event handler /onChange/
 
@@ -332,10 +335,9 @@ var jTable = (function ($) {
 
             jqueryMap.$table.find("td")
             .on('click', onClick)
-
-
-            jqueryMap.$table.find("td:not(." + configMap.cell_edited_class + ")")
-            .on('change', onChange);
+            .on('change', onChange)
+            .on('input', onChange);
+            
 
             //            jqueryMap.$contents.find("td")
             //            .on('dblclick', onDoubleClick);
