@@ -20,7 +20,10 @@ var jTable = (function ($) {
         cell_edited_class: 'jTable-edited',
         main_HTML: String()
                 + '<div class="jTable-main">'
-                    + '<div class="jTable-options">'
+                    + '<div class="jTable-content"></div>'
+                + '</div>',
+        options_HTML: String()
+                     + '<div class="jTable-options">'
                         + '<a class="jTable-edit">'
                             + 'Edit'
                         + '</a>'
@@ -31,8 +34,6 @@ var jTable = (function ($) {
                             + 'Cancel'
                         + '</a>'
                     + '</div>'
-                    + '<div class="jTable-content"></div>'
-                + '</div>'
     },
     settingsMap = {
         dropDownCol: [],
@@ -323,6 +324,12 @@ var jTable = (function ($) {
                 $parent  = $table.parent(),
                 $element = $(configMap.main_HTML).prependTo($parent)
             ;
+
+            if ($table.find("caption").length == 0) {
+                $table.prepend("<caption></caption>");
+            }
+
+            $table.find("caption").append(configMap.options_HTML);
 
             //insert the element into the parent of the table
             $table.appendTo(
