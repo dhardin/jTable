@@ -24,13 +24,13 @@ var jTable = (function ($) {
                 + '</div>',
         options_HTML: String()
                      + '<div class="jTable-options">'
-                        + '<a class="jTable-edit">'
+                        + '<a class="jTable-edit" title="Click to edit">'
                             + 'Edit'
                         + '</a>'
-                        + '<a class="jTable-save">'
+                        + '<a class="jTable-save" title="Click to save changes">'
                             + 'Save'
                         + '</a>'
-                        + '<a class="jTable-cancel">'
+                        + '<a class="jTable-cancel" title="Click to cancel changes">'
                             + 'Cancel'
                         + '</a>'
                     + '</div>'
