@@ -20,13 +20,13 @@ var jTable = (function ($) {
                 + '<div class="jTable-main">'
                     + '<div class="jTable-options">'
                         + '<a class="jTable-edit">'
-                        + 'Edit'
+                            + 'Edit'
                         + '</a>'
-                         + '<a class="jTable-save">'
-                        + 'Save'
+                        + '<a class="jTable-save">'
+                            + 'Save'
                         + '</a>'
-                         + '<a class="jTable-cancel">'
-                        + 'Cancel'
+                        + '<a class="jTable-cancel">'
+                            + 'Cancel'
                         + '</a>'
                     + '</div>'
                     + '<div class="jTable-content"></div>'
@@ -37,8 +37,8 @@ var jTable = (function ($) {
         dropDownVal: []
     },
     stateMap = {
-        $table: null,
-        $container: null,
+        $table         : null,
+        $container     : null,
         is_edit_enabled: false
     },
     jqueryMap = {},
@@ -78,27 +78,26 @@ var jTable = (function ($) {
     setJqueryMap = function () {
         var 
             $table = stateMap.$table,
-            $main = stateMap.$container
+            $main  = stateMap.$container
         ;
 
         jqueryMap = {
-            $main: $main,
-            $edit: $main.find('.jTable-edit'),
-            $save: $main.find('.jTable-save'),
-            $cancel: $main.find('.jTable-cancel'),
+            $main    : $main,
+            $edit    : $main.find('.jTable-edit'),
+            $save    : $main.find('.jTable-save'),
+            $cancel  : $main.find('.jTable-cancel'),
             $contents: $main.find('.jTable-content'),
-            $table: $table
+            $table   : $table
         };
     };
     // End dom method /setJqueryMap/
     // Begin dom method /addDropDown/
     addDropDown = function (columnNum, selectedValue) {
         var 
-            dropDown_HTML = String()
-                            + '<select class="' + configMap.cell_edit_class + '">',
-            columns = settingsMap.dropDownCol,
-            colIndex = settingsMap.dropDownCol.indexOf(columnNum),
-            values = settingsMap.dropDownVal[colIndex]
+            dropDown_HTML = String() + '<select class="' + configMap.cell_edit_class + '">',
+            columns       = settingsMap.dropDownCol,
+            colIndex      = settingsMap.dropDownCol.indexOf(columnNum),
+            values        = settingsMap.dropDownVal[colIndex]
         ;
 
         if (jQuery.inArray(columnNum, columns) > -1) {
@@ -115,7 +114,7 @@ var jTable = (function ($) {
             values_HTML = String()
         ;
         for (value in values) {
-            values_HTML += '<option value"' + values[value] + '" ' + (selectedValue == values[value] ? 'selected="true"' : '') + '>' + values[value] + '</option>';
+            values_HTML += '<option value"' + values[value] + '" ' + (selectedValue === values[value] ? 'selected="true"' : '') + '>' + values[value] + '</option>';
         }
         return values_HTML;
     };
@@ -238,9 +237,11 @@ var jTable = (function ($) {
     // Begin Event handler /onBlur/
     onBlur = function (e) {
 
-        var cell_edit_class = configMap.cell_edit_class,
-        $this = $(this),
-        $prevEditDiv = $this.find('.' + cell_edit_class);
+        var
+            cell_edit_class = configMap.cell_edit_class,
+            $this           = $(this),
+            $prevEditDiv    = $this.find('.' + cell_edit_class)
+        ;
 
         if ($prevEditDiv.length > 0) {
             $this.html(getEditValue($prevEditDiv));
@@ -253,21 +254,21 @@ var jTable = (function ($) {
     onClickEdit = function (e) {
         toggleEdit();
         makeEditTable(jqueryMap.$table);
-    }
+    };
     // End Event handler /onClickEdit/
 
     // Begin Event handler /onClickSave/
     onClickSave = function (e) {
         toggleEdit();
         removeEditTable(jqueryMap.$table, true);
-    }
+    };
     // End Event handler /onClickSave/
 
     // Begin Event handler /onClickCancel/
     onClickCancel = function (e) {
         toggleEdit();
         removeEditTable(jqueryMap.$table, false);
-    }
+    };
     // End Event handler /onClickCancel/
 
     //-------------------- END EVENT HANDLERS --------------------
@@ -299,7 +300,7 @@ var jTable = (function ($) {
     initModule = function ($table) {
         if ($table[0].nodeName == "TABLE") {
             var 
-                $parent = $table.parent(),
+                $parent  = $table.parent(),
                 $element = $(configMap.main_HTML).prependTo($parent)
             ;
 
