@@ -1,0 +1,36 @@
+<!DOCTYPE html />
+<html>
+<head>
+<link rel="Stylesheet" href="css/jTable.css" />
+<script src="js/jq/jquery-1.9.1.js"></script>
+<script src="js/jq/jquery.event.gevent.js"></script>
+<script src="js/jTable_plugin.js"></script>
+<script>
+    $(function () {
+
+        $(".jTable").jTable({
+            dropDownCol: [0, 2],
+            dropDownVal: [
+                            ["Red", "Green", "Blue"],
+                            ["1", "2", "3", "4"]
+            ]
+        });
+    });
+</script>
+<style>
+
+
+</style>
+</head>
+<body>
+<table class="jTable">
+<caption>This is a jTable</caption>
+<tr>
+<td>Green</td><td>2</td><td>3</td>
+</tr>
+<tr>
+<td>Red</td><td>5</td><td>2</td>
+</tr>
+</table>
+</body>
+</html>

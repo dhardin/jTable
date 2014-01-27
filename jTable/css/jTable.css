@@ -43,9 +43,9 @@ strong
 .jTable
 {
     border-collapse: collapse;
-    border: 1px solid #ccc;
     font-size: 5em !important;
 }
+
 .jTable caption
 {
     font-size: 0.5em;
@@ -53,6 +53,11 @@ strong
 .jTable td
 {
     color: #aaa;
+}
+
+.jTable td, .jTable tr 
+{
+    border: 1px solid #ccc;
 }
 
 .jTable-Row
@@ -69,6 +74,10 @@ strong
     border: 1px solid black;
 }
 
+.jTable-focus
+{
+    border: 2px solid #880000 !important;
+}
 
 .jTable-options
 {
