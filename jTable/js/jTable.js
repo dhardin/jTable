@@ -48,6 +48,7 @@ var jTable = (function ($) {
     jqueryMap = {},
     setJqueryMap, onClick, onDoubleClick, onBlur,
     onChange, onClickEdit, onClickSave, onClickCancel,
+    onKeydown, onKeyCtrlE, onKeyCtrlS, onKeyEsc,
     objectCreate, extendObject, addSelectEdit,
     addDropDown, addDropDownValues, addEditiableDiv,
     getEditValue, toggleEdit, makeEditTable,
@@ -176,7 +177,7 @@ var jTable = (function ($) {
         $table.find('td').each(function () {
             var 
                 $this = $(this),
-                $text = $this.text()
+                $text = $this.html()
             ;
             $this.data("contents", $text);
             $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $text) : addEditiableDiv($this.html()));
@@ -291,6 +292,62 @@ var jTable = (function ($) {
     };
     // End Event handler /onClickCancel/
 
+    // Begin Event handler /onKeydown/
+    onKeydown = function (e) {
+        var keyCodeEnum = {
+            E: {value: 69, code: "E"},
+            S: {value: 83, code: "S"},
+            ESC: { value: 27, code: "ESC"}
+        };
+        if(e.ctrlKey) {
+            switch (e.which) {
+                case (keyCodeEnum.E.value):
+                    {
+                        if (!stateMap.is_edit_enabled) {
+                            e.preventDefault();
+                            onKeyCtrlE(e);
+                            return false;
+                        }
+                       
+                    }
+                case (keyCodeEnum.S.value):
+                    {
+                        if (stateMap.is_edit_enabled) {
+                            e.preventDefault();
+                            onKeyCtrlS(e);
+                            return false;
+                        }
+                    }
+                default: { break; }
+            }
+        }
+        else if (e.which == keyCodeEnum.ESC.value) {
+            e.preventDefault();
+            onKeyEsc(e);
+            return false;
+        }
+    }
+    // End Event handler /onKeydown/
+
+    // Begin Event handler /onKeyCtrlE/
+    onKeyCtrlE = function (e) {
+        onClickEdit(e);
+        return false;
+    }
+    // End Event handler /onKeyCtrlE/
+    // Begin Event handler /onKeyCtrlS/
+    onKeyCtrlS = function (e) {
+        onClickSave(e);
+        return false;
+    }
+    // End Event handler /onKeyCtrlS/
+    // Begin Event handler /onKeyEsc/
+    onKeyEsc = function (e) {
+        onClickCancel(e);
+        return false;
+    }
+    // End Event handler /onKeyEsc/
+
     //-------------------- END EVENT HANDLERS --------------------
     // Begin public method /configModule/
     // Purpose : Adjust configuration of allowed keys
@@ -360,6 +417,11 @@ var jTable = (function ($) {
 
             jqueryMap.$cancel
             .on('click', onClickCancel);
+
+            $(document)
+            .on('keydown', onKeydown);
+    
+   
 
             return true;
         }
