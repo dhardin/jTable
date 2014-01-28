@@ -37,8 +37,7 @@
                     + '</div>'
     },
     settingsMap = {
-        dropDownCol: [],
-        dropDownVal: []
+        columns : []
     },
     stateMap = {
         $table         : null,
@@ -99,16 +98,14 @@
     };
     // End dom method /setJqueryMap/
     // Begin dom method /addDropDown/
-    addDropDown = function (columnNum, selectedValue) {
+    addDropDown = function (colIndex, selectedValue) {
         var 
             dropDown_HTML = String() + '<select class="' + configMap.cell_edit_class + '">',
-            columns       = settingsMap.dropDownCol,
-            colIndex      = settingsMap.dropDownCol.indexOf(columnNum),
-            values        = settingsMap.dropDownVal[colIndex]
+            columns       = settingsMap.columns
         ;
 
-        if (jQuery.inArray(columnNum, columns) > -1) {
-            dropDown_HTML += addDropDownValues(values, selectedValue);
+            if (columns[colIndex].inputType === $.Utils.inputType.DROPDOWN) {
+                dropDown_HTML += addDropDownValues(columns[colIndex].dropDownValues, selectedValue);
         }
         dropDown_HTML += '</select>';
 
@@ -120,6 +117,11 @@
             value,
             values_HTML = String()
         ;
+
+        if (!$.isArray(values)) {
+            return false;
+        }
+
         for (value in values) {
             values_HTML += '<option value"' + values[value] + '" ' + (selectedValue === values[value] ? 'selected="true"' : '') + '>' + values[value] + '</option>';
         }
@@ -179,7 +181,7 @@
     makeEditTable = function ($table) {
         var 
             cell_edit_class = configMap.cell_edit_class,
-            columns = settingsMap.dropDownCol
+            columns = settingsMap.columns
          ;
 
         $table.find('td').each(function () {
@@ -188,11 +190,15 @@
                 $text = $this.html()
             ;
             $this.data("contents", $text);
-            $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $text) : addEditiableDiv($this.html()));
+            $this.html(
+                        (columns[$this[0].cellIndex].inputType === $.Utils.inputType.DROPDOWN)
+                        ? addDropDown($this[0].cellIndex, $text) 
+                        : addEditiableDiv($this.html())
+                      );
         });
     };
     // End dom method /makeEditTable/
-
+   
     // Begin dom method /removeEditTable/
     removeEditTable = function ($table, save) {
         var 
@@ -249,7 +255,10 @@
         var $this = $(this);
         if (!$this.hasClass(configMap.cell_edited_class)) {
             $this.addClass(configMap.cell_edited_class);
-            stateMap.cells_edited.push($this)
+            if (stateMap.cells_edited)
+            stateMap.cells_edited.push(
+                $.Utils.initRow()
+            );
         }
     }
     // End Event handler /onChange/
@@ -294,7 +303,7 @@
                                 onKeyCtrlE(e);
                                 return false;
                             }
-                       
+                            break;
                         }
                     case (keyCodeEnum.S.value):
                         {
@@ -303,11 +312,12 @@
                                 onKeyCtrlS(e);
                                 return false;
                             }
+                            break;
                         }
                     default: { break; }
                 }
             }
-            else if (e.which == keyCodeEnum.ESC.value) {
+            else if (e.which == keyCodeEnum.ESC.value && stateMap.is_edit_enabled) {
                 e.preventDefault();
                 onKeyEsc(e);
                 return false;
@@ -336,7 +346,8 @@
     // End Event handler /onKeyEsc/
 
     //-------------------- END EVENT HANDLERS --------------------
-    // Begin public method /configModule/
+    //-------------------- BEGIN PRIVATE METHODS------------------
+    // Begin private method /configModule/
     // Purpose : Adjust configuration of allowed keys
     // Arguments : A map of settable keys and values
     // * color_name - color to use
@@ -354,8 +365,8 @@
         }
         return true;
     };
-    // End public method /configModule/
-    // Begin public method /initModule/
+    // End private method /configModule/
+    // Begin private method /initModule/
     // Purpose : Initializes module
     // Arguments :
     // * $container the jquery element used by this feature
@@ -363,60 +374,101 @@
     // Throws : nonaccidental
     //
     initModule = function ($table) {
-            var 
-                $parent  = $table.parent(),
-                $element = $(configMap.main_HTML).prependTo($parent)
-            ;
+        var
+            $parent = $table.parent(),
+            $element = $(configMap.main_HTML).prependTo($parent)
+        ;
 
-            if ($table.find("caption").length == 0) {
-                $table.prepend("<caption></caption>");
-            }
+        if ($table.find("caption").length == 0) {
+            $table.prepend("<caption></caption>");
+        }
 
-            $table.find("caption").append(configMap.options_HTML);
+        $table.find("caption").append(configMap.options_HTML);
 
-            //insert the element into the parent of the table
-            $table.appendTo(
-                $element.find('.jTable-content')
-            );
+        //insert the element into the parent of the table
+        $table.appendTo(
+            $element.find('.jTable-content')
+        );
 
-            stateMap.$container = $element;
-            stateMap.$table = $table;
-            setJqueryMap();
+        stateMap.$container = $element;
+        stateMap.$table = $table;
+        setJqueryMap();
 
-            jqueryMap.$table.find("td")
-            .on('click', onClick)
-            .on('change', onChange)
-            .on('input', onChange);
+        jqueryMap.$table.find("td")
+        .on('click', onClick)
+        .on('change', onChange)
+        .on('input', onChange);
 
-            jqueryMap.$table
-            .on('click', onFocus);
-            
-            $(document)
-            .on('click', onBlur);
+        jqueryMap.$table
+        .on('click', onFocus);
 
-            jqueryMap.$edit
-            .on('click', onClickEdit);
+        $(document)
+        .on('click', onBlur);
 
-            jqueryMap.$save
-            .on('click', onClickSave);
+        jqueryMap.$edit
+        .on('click', onClickEdit);
 
-            jqueryMap.$cancel
-            .on('click', onClickCancel);
+        jqueryMap.$save
+        .on('click', onClickSave);
 
-            $(document)
-            .on('keydown', onKeydown);
-    
-            return true;
+        jqueryMap.$cancel
+        .on('click', onClickCancel);
+
+        $(document)
+        .on('keydown', onKeydown);
+
+        return true;
     };
-    // End public method /initModule/
-
-    jQuery.fn.jTable = function (settings_map) {
+    // End private method /initModule/
+    //-------------------- END PRIVATE METHODS--------------------
+    //------------------- BEGIN PUBLIC METHODS ---------------------
+    $.fn.jTable = function (settings_map) {
         var $table = $(this);
         if ($table[0].nodeName == "TABLE") {
             configModule(settings_map);
             initModule($table);
         }
         return this;
+    };
+
+    $.Utils = {
+        inputType: { TEXT: 0, DROPDOWN: 1, LENGTH: 2 },
+        makeValuePair: function (columnIndex, value) {
+            var valPair = {
+                columnIndex: value
+            };
+            return valPair;
+        },
+        makeColumn: function (index, inputTypeEnum, dropDownValues) {
+            if (index < 0 && typeof index !== "Number") {
+                return false;
+            }
+            if ( inputTypeEnum >= $.Utils.inputType.LENGTH) {
+                return false;
+            }
+            if (inputTypeEnum === $.Utils.inputType.DROPDOWN && !$.isArray(dropDownValues)) {
+                return false;
+            }
+            var colObject = {
+                index: index,
+                inputType: inputTypeEnum,
+                dropDownValues: dropDownValues
+            };
+            return colObject;
+        },
+        initRow: function (id, valuePairsArray) {
+            if (id < 0 && typeof id !== "Number") {
+                return false;
+            }
+            if (!$.isArray(valuePairsArray)) {
+                return false;
+            }
+            var rowObject = {
+                id: id,
+                valuePairsArray : valuePairsArray
+            };
+            return rowObject;
+        }
     };
     // return public methods
     //return {

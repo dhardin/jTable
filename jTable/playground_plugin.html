@@ -9,10 +9,10 @@
     $(function () {
 
         $(".jTable").jTable({
-            dropDownCol: [0, 2],
-            dropDownVal: [
-                            ["Red", "Green", "Blue"],
-                            ["1", "2", "3", "4"]
+            columns: [
+                $.Utils.makeColumn(0, $.Utils.inputType.DROPDOWN, ["Red", "Green", "Blue"]),
+                $.Utils.makeColumn(1, $.Utils.inputType.TEXT),
+                $.Utils.makeColumn(2, $.Utils.inputType.DROPDOWN, ["1", "2", "3", "4"])
             ]
         });
     });
@@ -25,12 +25,15 @@
 <body>
 <table class="jTable">
 <caption>This is a jTable</caption>
-<tr>
-<td>Green</td><td>2</td><td>3</td>
-</tr>
-<tr>
-<td>Red</td><td>5</td><td>2</td>
-</tr>
+    <tr>
+        <th>Color Dropdown</th><th>Number Input</th><th>Number Dropdown</th>
+    </tr>
+    <tr>
+        <td>Green</td><td>2</td><td>3</td>
+    </tr>
+    <tr>
+        <td>Red</td><td>5</td><td>2</td>
+    </tr>
 </table>
 </body>
 </html>

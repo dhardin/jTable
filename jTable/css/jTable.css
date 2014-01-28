@@ -40,44 +40,75 @@ strong
 }
 /** End standard selectors */
 
+.jTable-main
+{
+    
+}
+.jTable-content
+{
+    
+}
+
 .jTable
 {
     border-collapse: collapse;
-    font-size: 5em !important;
-}
-
-.jTable caption
-{
-    font-size: 0.5em;
-}
-.jTable td
-{
-    color: #aaa;
-}
-
-.jTable td, .jTable tr 
-{
-    border: 1px solid #ccc;
-}
-
-.jTable-Row
-{
-    background-color: #88ff88;
-    color: #000;
-}
-
-.jTable-Edit-Cell
-{
-    background-color: #eee;
-    color: #000;
-    font-size: inherit;
-    border: 1px solid black;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
 }
 
 .jTable-focus
 {
     border: 2px solid #880000 !important;
 }
+
+    .jTable caption
+    {
+        font-size: 3em;
+    }
+
+
+    .jTable td, .jTable tr , .jTable th
+    {
+        border: 1px solid #ccc;
+    }
+
+    .jTable td, .jTable th
+    {
+        font-size: 3em;
+        padding: 0.1em;
+    }
+    .jTable th
+    {
+        color: #aaa;
+        font-size: 2em;
+    }
+    .jTable td
+    {
+        color: #333;
+        padding: 5px;
+        border: 1px solid #aaa;
+        text-align: center;
+    }
+
+    .jTable-Row
+    {
+        background-color: #88ff88;
+        color: #000;
+    }
+
+    .jTable-Edit-Cell
+    {
+        background-color: #eee;
+        color: #000;
+        font-size: inherit;
+        border: 1px solid black;
+        width: 100%;
+        text-align: center;
+    }
+
+
 
 .jTable-options
 {
@@ -86,39 +117,26 @@ strong
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
     background-color: #aaccff;
+    font-size: 1em;
 }
     .jTable-options a:hover
     {
         color: #eee;
     }
 
-.jTable-edit, .jTable-save, .jTable-cancel
-{
-    cursor: pointer;
-    color: #0000aa;
-    padding: 0 5px 0 5px;
-    font-size: 0.5em;
-}
-/** Default rendering of save and cancel elements **/
-.jTable-save, .jTable-cancel
-{
-    display: none;
-}
+    .jTable-edit, .jTable-save, .jTable-cancel
+    {
+        cursor: pointer;
+        color: #0000aa;
+        padding: 0 5px 0 5px;
+        font-size: 0.5em;
+    }
+    /** Default rendering of save and cancel elements **/
+    .jTable-save, .jTable-cancel
+    {
+        display: none;
+    }
 
-
-
-.jTable-main
-{
-    position: absolute;
-    top: 200;
-    left: 40%;
-}
-
-td
-{
-    padding: 5px;
-    border: 1px solid #aaa;
-}
 
 
 
