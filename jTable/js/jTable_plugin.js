@@ -182,8 +182,9 @@
     // Begin dom method /makeEditTable/
     makeEditTable = function ($table) {
         var 
+            innerHTML,
             cell_edit_class = configMap.cell_edit_class,
-            columns = settingsMap.columns
+            columns = settingsMap.columns            
          ;
 
         $table.find('td').each(function () {
@@ -192,11 +193,17 @@
                 $text = $this.html()
             ;
             $this.data("contents", $text);
-            $this.html(
-                        (columns[$this[0].cellIndex].inputType === $.Utils.inputType.DROPDOWN)
-                        ? addDropDown($this[0].cellIndex, $text) 
-                        : addEditiableDiv($this.html())
-                      );
+            switch (columns[$this[0].cellIndex].inputType)
+            {
+                case $.Utils.inputType.DROPDOWN:
+                    $this.html(addDropDown($this[0].cellIndex, $text));
+                    break;
+                case $.Utils.inputType.TEXT:
+                    $this.html(addEditiableDiv($this.html()));
+                    break;
+                default:
+                    break;
+            }
         });
     };
     // End dom method /makeEditTable/
