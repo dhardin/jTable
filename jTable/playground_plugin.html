@@ -7,13 +7,29 @@
 <script src="js/jTable_plugin.js"></script>
 <script>
     $(function () {
-
+        var colIndex = 0;
         $(".jTable").jTable({
             columns: [
-                $.Utils.makeColumn(0, $.Utils.inputType.DROPDOWN, ["Red", "Green", "Blue"]),
-                $.Utils.makeColumn(1, $.Utils.inputType.TEXT),
-                $.Utils.makeColumn(2, $.Utils.inputType.DROPDOWN, ["1", "2", "3", "4"])
-            ]
+                $.Utils.makeColumn(colIndex++, "ID"),
+                $.Utils.makeColumn(colIndex++, "Color", $.Utils.inputType.DROPDOWN, ["Red", "Green", "Blue"]),
+                $.Utils.makeColumn(colIndex++, "Num1", $.Utils.inputType.TEXT),
+                $.Utils.makeColumn(colIndex++, "Num2", $.Utils.inputType.DROPDOWN, ["1", "2", "3", "4"])
+            ],
+            rowUniqueID: true,
+            rowIDColumnIndex: 0
+        });
+
+        var $t = $('<div/>');
+
+        $.gevent.subscribe($t, 'jTable-saved', function (event, cellsChanged) {
+            var
+                index = 0
+            ;
+
+            for (index = 0; index < cellsChanged.length; index++)
+            {
+                console.log(cellsChanged[index]);
+            }
         });
     });
 </script>
@@ -26,13 +42,13 @@
 <table class="jTable">
 <caption>This is a jTable</caption>
     <tr>
-        <th>Color Dropdown</th><th>Number Input</th><th>Number Dropdown</th>
+        <th>ID</th><th>Color Dropdown</th><th>Number Input</th><th>Number Dropdown</th>
     </tr>
     <tr>
-        <td>Green</td><td>2</td><td>3</td>
+        <td>1</td><td>Green</td><td>2</td><td>3</td>
     </tr>
     <tr>
-        <td>Red</td><td>5</td><td>2</td>
+        <td>2</td><td>Red</td><td>5</td><td>2</td>
     </tr>
 </table>
 </body>

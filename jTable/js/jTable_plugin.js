@@ -37,7 +37,9 @@
                     + '</div>'
     },
     settingsMap = {
-        columns : []
+        columns: [],
+        rowUniqueID: false,
+        rowIDColumnIndex: -1
     },
     stateMap = {
         $table         : null,
@@ -255,10 +257,15 @@
         var $this = $(this);
         if (!$this.hasClass(configMap.cell_edited_class)) {
             $this.addClass(configMap.cell_edited_class);
-            if (stateMap.cells_edited)
-            stateMap.cells_edited.push(
-                $.Utils.initRow()
-            );
+            if (stateMap.cells_edited) {
+                stateMap.cells_edited.push(
+                    {
+                        rowID: $this.data("rowID"),
+                        columnName: settingsMap.columns[$this[0].cellIndex].name,
+                        value: getEditValue($this.find("." + configMap.cell_edit_class))
+                    }
+                );
+            }
         }
     }
     // End Event handler /onChange/
@@ -394,6 +401,20 @@
         stateMap.$table = $table;
         setJqueryMap();
 
+        if (settingsMap.rowUniqueID && settingsMap.rowIDColumnIndex > -1) {
+            $table.find('td').each(function (index) {
+                var
+                    $this = $(this),
+                    row_index = $this.closest("tr").index(),
+                    //col_index = $this.index(),
+                    row_id = $this.siblings().eq(settingsMap.rowIDColumnIndex).text();
+                ;
+
+                $this.data("rowID", row_id);
+
+            });
+        }
+
         jqueryMap.$table.find("td")
         .on('click', onClick)
         .on('change', onChange)
@@ -425,7 +446,9 @@
     $.fn.jTable = function (settings_map) {
         var $table = $(this);
         if ($table[0].nodeName == "TABLE") {
-            configModule(settings_map);
+            if (settings_map){
+                configModule(settings_map);
+            }
             initModule($table);
         }
         return this;
@@ -439,7 +462,7 @@
             };
             return valPair;
         },
-        makeColumn: function (index, inputTypeEnum, dropDownValues) {
+        makeColumn: function (index, name, inputTypeEnum, dropDownValues) {
             if (index < 0 && typeof index !== "Number") {
                 return false;
             }
@@ -451,20 +474,21 @@
             }
             var colObject = {
                 index: index,
+                name: name,
                 inputType: inputTypeEnum,
                 dropDownValues: dropDownValues
             };
             return colObject;
         },
-        initRow: function (id, valuePairsArray) {
-            if (id < 0 && typeof id !== "Number") {
+        initRow: function (row_id, valuePairsArray) {
+            if (row_id < 0 && typeof row_id !== "Number") {
                 return false;
             }
             if (!$.isArray(valuePairsArray)) {
                 return false;
             }
             var rowObject = {
-                id: id,
+                row_id: row_id,
                 valuePairsArray : valuePairsArray
             };
             return rowObject;
