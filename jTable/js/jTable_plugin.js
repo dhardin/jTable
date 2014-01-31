@@ -25,15 +25,22 @@
                 + '</div>',
         options_HTML: String()
                      + '<div class="jTable-options">'
-                        + '<a class="jTable-edit" title="Click to edit">'
-                            + 'Edit'
-                        + '</a>'
-                        + '<a class="jTable-save" title="Click to save changes">'
-                            + 'Save'
-                        + '</a>'
-                        + '<a class="jTable-cancel" title="Click to cancel changes">'
-                            + 'Cancel'
-                        + '</a>'
+                        + '<div class="jTable-notify>">'
+                            + '<span class="jTable-notify-edit">Editing...</span>'
+                            + '<span class="jTable-notify-save">Saving...</span>'
+                            + '<span class="jTable-notify-cancel">Cancelling...</span>'
+                        + '</div>'
+                        + '<div class="jTable-menu">'
+                            + '<a class="jTable-edit" title="Click to edit">'
+                                + 'Edit'
+                            + '</a>'
+                            + '<a class="jTable-save" title="Click to save changes">'
+                                + 'Save'
+                            + '</a>'
+                            + '<a class="jTable-cancel" title="Click to cancel changes">'
+                                + 'Cancel'
+                            + '</a>'
+                        + '</div>'
                     + '</div>'
     },
     settingsMap = {
@@ -55,7 +62,8 @@
     objectCreate, extendObject, addSelectEdit,
     addDropDown, addDropDownValues, addEditiableDiv,
     getEditValue, toggleEdit, makeEditTable, toggleFocus,
-    removeEditTable, makeCell, configModule, initModule;
+    removeEditTable, makeCell, saveTd, cancelTd, editTd,
+    configModule, initModule;
 
     //----------------- END MODULE SCOPE VARIABLES ---------------
     //------------------- BEGIN UTILITY METHODS ------------------
@@ -90,12 +98,15 @@
         ;
 
         jqueryMap = {
-            $main    : $main,
+            $main: $main,
+            $table: $table,
             $edit    : $main.find('.jTable-edit'),
             $save    : $main.find('.jTable-save'),
             $cancel  : $main.find('.jTable-cancel'),
             $contents: $main.find('.jTable-content'),
-            $table   : $table
+            $editNotify: $main.find('.jTable-notify-edit'),
+            $saveNotify: $main.find('.jTable-notify-save'),
+            $cancelNotify: $main.find('.jTable-notify-cancel')
         };
     };
     // End dom method /setJqueryMap/
@@ -180,36 +191,20 @@
     // End dom method /toggleFocus/
 
     // Begin dom method /makeEditTable/
-    makeEditTable = function ($table) {
+    makeEditTable = function ($table, callback) {
         var 
             innerHTML,
             cell_edit_class = configMap.cell_edit_class,
             columns = settingsMap.columns            
          ;
 
-        $table.find('td').each(function () {
-            var 
-                $this = $(this),
-                $text = $this.html()
-            ;
-            $this.data("contents", $text);
-            switch (columns[$this[0].cellIndex].inputType)
-            {
-                case $.Utils.inputType.DROPDOWN:
-                    $this.html(addDropDown($this[0].cellIndex, $text));
-                    break;
-                case $.Utils.inputType.TEXT:
-                    $this.html(addEditiableDiv($this.html()));
-                    break;
-                default:
-                    break;
-            }
-        });
+        editTd($table.find('td'), 0, callback);
+          
     };
     // End dom method /makeEditTable/
    
     // Begin dom method /removeEditTable/
-    removeEditTable = function ($table, save) {
+    removeEditTable = function ($table, save, callback) {
         var 
             cell_edit_class = configMap.cell_edit_class,
             $prevEditDiv = jqueryMap.$contents.find('.' + cell_edit_class)
@@ -218,17 +213,73 @@
         //remove edit class from all changed cells
         $('.' + configMap.cell_edited_class).removeClass(configMap.cell_edited_class);
 
-        $prevEditDiv.each(function () {
-            var $this = $(this);
-            if (save) {
-                $this.parent().html(getEditValue($this));
-            }
-            else {
-                $this.parent().html($this.parent().data("contents"));
-            }
-        });
+        if (save) {
+            saveTd($prevEditDiv, 0, callback);
+        }
+        else {
+            cancelTd($prevEditDiv, 0, callback);
+        }
     };
     // End dom method /removeEditTable/
+    saveTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var $td = $tdElements.eq(index);
+
+            $td.parent().html(getEditValue($td));
+       
+            setTimeout(function () {
+                saveTd($tdElements, ++index, callback)
+            }, 20);
+        }
+        else if (callback){
+            callback();
+        }
+    };
+
+    cancelTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var $td = $tdElements.eq(index);
+
+            $td.parent().html($td.parent().data("contents"));
+           
+            setTimeout(function () {
+                cancelTd($tdElements, ++index, callback);
+            }, 20);
+        }
+        else if (callback){
+            callback();
+        }
+    };
+   
+    editTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var
+               $td = $tdElements.eq(index),
+               $text = $td.html(),
+               inputType = settingsMap.columns[$td.index()].inputType
+            ;
+
+            $td.data("contents", $text);
+
+            switch (inputType) {
+                case $.Utils.inputType.DROPDOWN:
+                    $td.html(addDropDown($td.index(), $text));
+                    break;
+                case $.Utils.inputType.TEXT:
+                    $td.html(addEditiableDiv($td.html()));
+                    break;
+                default:
+                    break;
+            }
+        
+            setTimeout(function () {
+                editTd($tdElements, ++index, callback);
+            }, 20);
+        }
+        else if (callback) {
+            callback();
+        }
+    };
     //---------------------- END DOM METHODS ---------------------
     //------------------- BEGIN EVENT HANDLERS -------------------
     // Begin Event handler /onFocus/
@@ -281,14 +332,20 @@
     onClickEdit = function (e) {
         stateMap.cells_edited = [];
         toggleEdit();
-        makeEditTable(jqueryMap.$table);
+        jqueryMap.$editNotify.show();
+        makeEditTable(jqueryMap.$table, function () {
+            jqueryMap.$editNotify.hide();
+        });
     };
     // End Event handler /onClickEdit/
 
     // Begin Event handler /onClickSave/
     onClickSave = function (e) {
         toggleEdit();
-        removeEditTable(jqueryMap.$table, true);
+        jqueryMap.$saveNotify.show();
+        removeEditTable(jqueryMap.$table, true, function () {
+            jqueryMap.$saveNotify.hide();
+        });
         $.gevent.publish('jTable-saved', [stateMap.cells_edited])
     };
     // End Event handler /onClickSave/
@@ -296,7 +353,10 @@
     // Begin Event handler /onClickCancel/
     onClickCancel = function (e) {
         toggleEdit();
-        removeEditTable(jqueryMap.$table, false);
+        jqueryMap.$cancelNotify.show();
+        removeEditTable(jqueryMap.$table, false, function () {
+            jqueryMap.$cancelNotify.hide();
+        });
     };
     // End Event handler /onClickCancel/
 
@@ -462,7 +522,7 @@
     };
 
     $.Utils = {
-        inputType: { TEXT: 0, DROPDOWN: 1, LENGTH: 2 },
+        inputType: { TEXT: 0, DROPDOWN: 1, NAN: 3, LENGTH: 4 },
         makeValuePair: function (columnIndex, value) {
             var valPair = {
                 columnIndex: value
@@ -482,7 +542,7 @@
             var colObject = {
                 index: index,
                 name: name,
-                inputType: inputTypeEnum,
+                inputType: (typeof inputTypeEnum !== 'undefined' ? inputTypeEnum : $.Utils.inputType.NAN),
                 dropDownValues: dropDownValues
             };
             return colObject;

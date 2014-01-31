@@ -107,17 +107,35 @@ strong
         width: 100%;
         text-align: center;
     }
-
-
-
-.jTable-options
+.jTable-options {
+    background-color: #333;
+    font-size: 0.5em;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    position:  relative;
+    height: 30px;
+    display: table;
+}
+.jTable-notify {
+    text-align: left;
+    color: #fff;
+    width: 30%;
+    position: absolute;
+    left: 0px;
+    height: 100%;
+}
+.jTable-menu
 {
     text-align: right;
     border: 1px solid #eee;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
     background-color: #aaccff;
-    font-size: 1em;
+    width: 30%;
+    position:absolute;
+    right:0px;
+    height: 100%;
+    
+    
 }
     .jTable-options a:hover
     {
@@ -129,10 +147,10 @@ strong
         cursor: pointer;
         color: #0000aa;
         padding: 0 5px 0 5px;
-        font-size: 0.5em;
+             
     }
     /** Default rendering of save and cancel elements **/
-    .jTable-save, .jTable-cancel
+    .jTable-save, .jTable-cancel, .jTable-notify-edit, .jTable-notify-save, .jTable-notify-cancel
     {
         display: none;
     }
