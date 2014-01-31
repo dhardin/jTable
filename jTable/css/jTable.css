@@ -107,35 +107,35 @@ strong
         width: 100%;
         text-align: center;
     }
-.jTable-options {
+.jTable .jTable-options {
     background-color: #333;
-    font-size: 0.5em;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    position:  relative;
+    font-size: 0.5em;   
     height: 30px;
-    display: table;
+    -webkit-user-select: none; /* Chrome/Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+    /* Rules below not implemented in browsers yet */
+    -o-user-select: none;
+    user-select: none;
+    border: 1px solid #00aa00;
+    overflow: hidden;
+    width: 100%;
 }
-.jTable-notify {
-    text-align: left;
-    color: #fff;
+caption .jTable-notify {
+    color: #fff !important;
     width: 30%;
-    position: absolute;
-    left: 0px;
     height: 100%;
+    float: left;
+    text-align:left !important;
 }
-.jTable-menu
+caption .jTable-menu
 {
-    text-align: right;
     border: 1px solid #eee;
     background-color: #aaccff;
     width: 30%;
-    position:absolute;
-    right:0px;
     height: 100%;
-    
-    
+    float:right;
+    text-align: right;
 }
     .jTable-options a:hover
     {
