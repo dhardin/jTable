@@ -60,6 +60,7 @@ strong
 
 .jTable-focus
 {
+    border-collapse: separate; /*IE fix*/
     -moz-box-shadow: 5px 5px 5px #999;
     -webkit-box-shadow: 5px 5px 5px #999;
     -khtml-box-shadow: 5px 5px 5px #999;
