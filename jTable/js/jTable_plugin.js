@@ -25,7 +25,7 @@
                 + '</div>',
         options_HTML: String()
                      + '<div class="jTable-options" unselectable="on">'
-                        + '<div class="jTable-notify>">'
+                        + '<div class="jTable-notify">'
                             + '<span class="jTable-notify-edit">Editing...</span>'
                             + '<span class="jTable-notify-save">Saving...</span>'
                             + '<span class="jTable-notify-cancel">Cancelling...</span>'
@@ -232,9 +232,7 @@
 
             $td.parent().html(getEditValue($td));
        
-            setTimeout(function () {
                 saveTd($tdElements, ++index, callback)
-            }, 20);
         }
         else if (callback){
             callback();
@@ -247,9 +245,7 @@
 
             $td.parent().html($td.parent().data("contents"));
            
-            setTimeout(function () {
                 cancelTd($tdElements, ++index, callback);
-            }, 20);
         }
         else if (callback){
             callback();
@@ -277,9 +273,7 @@
                     break;
             }
         
-            setTimeout(function () {
                 editTd($tdElements, ++index, callback);
-            }, 20);
         }
         else if (callback) {
             callback();
@@ -342,12 +336,15 @@
         stateMap.isEventHandlerActive = false;
         stateMap.cells_edited = [];
         jqueryMap.$editNotify.show();
-        makeEditTable(jqueryMap.$table, function () {
-            toggleEdit();
-            jqueryMap.$editNotify.hide();
-            stateMap.isEventHandlerActive = true;
-            jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
-        });
+
+        setTimeout(function () {
+            makeEditTable(jqueryMap.$table, function () {
+                toggleEdit();
+                jqueryMap.$editNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 2000);
     };
     // End Event handler /onClickEdit/
 
@@ -359,12 +356,15 @@
         jqueryMap.$menu.children().andSelf().css("cursor", "progress");
         stateMap.isEventHandlerActive = false;
         jqueryMap.$saveNotify.show();
-        removeEditTable(jqueryMap.$table, true, function () {
-            toggleEdit();
-            jqueryMap.$saveNotify.hide();
-            stateMap.isEventHandlerActive = true;
-            jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
-        });
+        
+        setTimeout(function () {
+            removeEditTable(jqueryMap.$table, true, function () {
+                toggleEdit();
+                jqueryMap.$saveNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 2000);
         $.gevent.publish('jTable-saved', [stateMap.cells_edited])
     };
     // End Event handler /onClickSave/
@@ -377,12 +377,15 @@
         jqueryMap.$menu.children().andSelf().css("cursor", "progress");
         stateMap.isEventHandlerActive = false;
         jqueryMap.$cancelNotify.show();
-        removeEditTable(jqueryMap.$table, false, function () {
-            toggleEdit();
-            jqueryMap.$cancelNotify.hide();
-            stateMap.isEventHandlerActive = true;
-            jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
-        });
+
+        setTimeout(function () {
+            removeEditTable(jqueryMap.$table, false, function () {
+                toggleEdit();
+                jqueryMap.$cancelNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 2000);
     };
     // End Event handler /onClickCancel/
 

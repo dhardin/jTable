@@ -60,7 +60,10 @@ strong
 
 .jTable-focus
 {
-    border: 2px solid #880000 !important;
+    -moz-box-shadow: 5px 5px 5px #999;
+    -webkit-box-shadow: 5px 5px 5px #999;
+    -khtml-box-shadow: 5px 5px 5px #999;
+    box-shadow: 5px 5px 5px #999;
 }
 
     .jTable caption
@@ -117,7 +120,6 @@ strong
     /* Rules below not implemented in browsers yet */
     -o-user-select: none;
     user-select: none;
-    border: 1px solid #00aa00;
     overflow: hidden;
     width: 100%;
 }
