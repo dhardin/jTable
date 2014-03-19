@@ -11,48 +11,61 @@
 //  GitHub: https://github.com/dhardin/jTable
 
 
-var jTable = (function ($) {
+(function ($, document, window) {
     'use strict'
     //----------------- BEGIN MODULE SCOPE VARIABLES ---------------
     var configMap = {
         row_highlight_class: 'jTable-Row',
         cell_edit_class: 'jTable-Edit-Cell',
         cell_edited_class: 'jTable-edited',
+        table_focus_class: 'jTable-focus',
         main_HTML: String()
                 + '<div class="jTable-main">'
                     + '<div class="jTable-content"></div>'
                 + '</div>',
         options_HTML: String()
-                     + '<div class="jTable-options">'
-                        + '<a class="jTable-edit" title="Click to edit">'
-                            + 'Edit'
-                        + '</a>'
-                        + '<a class="jTable-save" title="Click to save changes">'
-                            + 'Save'
-                        + '</a>'
-                        + '<a class="jTable-cancel" title="Click to cancel changes">'
-                            + 'Cancel'
-                        + '</a>'
+                     + '<div class="jTable-options" unselectable="on">'
+                        + '<div class="jTable-notify">'
+                            + '<span class="jTable-notify-edit">Editing...</span>'
+                            + '<span class="jTable-notify-save">Saving...</span>'
+                            + '<span class="jTable-notify-cancel">Cancelling...</span>'
+                        + '</div>'
+                        + '<div class="jTable-menu">'
+                            + '<a class="jTable-edit" title="Click to edit">'
+                                + 'Edit'
+                            + '</a>'
+                            + '<a class="jTable-save" title="Click to save changes">'
+                                + 'Save'
+                            + '</a>'
+                            + '<a class="jTable-cancel" title="Click to cancel changes">'
+                                + 'Cancel'
+                            + '</a>'
+                        + '</div>'
+                        + '<div style="clear: both"></div>'
                     + '</div>'
     },
     settingsMap = {
-        dropDownCol: [],
-        dropDownVal: []
+        columns: [],
+        rowUniqueID: false,
+        rowIDColumnIndex: -1
     },
     stateMap = {
         $table         : null,
         $container     : null,
         is_edit_enabled: false,
-        cells_edited   : []
+        cells_edited: [],
+        has_focus: false,
+        isEventHandlerActive : true
     },
     jqueryMap = {},
     setJqueryMap, onClick, onDoubleClick, onBlur,
     onChange, onClickEdit, onClickSave, onClickCancel,
-    onKeydown, onKeyCtrlE, onKeyCtrlS, onKeyEsc,
+    onKeydown, onKeyCtrlE, onKeyCtrlS, onKeyEsc, onFocus,
     objectCreate, extendObject, addSelectEdit,
     addDropDown, addDropDownValues, addEditiableDiv,
-    getEditValue, toggleEdit, makeEditTable,
-    removeEditTable, makeCell, configModule, initModule;
+    getEditValue, toggleEdit, makeEditTable, toggleFocus,
+    removeEditTable, makeCell, saveTd, cancelTd, editTd,
+    configModule, initModule;
 
     //----------------- END MODULE SCOPE VARIABLES ---------------
     //------------------- BEGIN UTILITY METHODS ------------------
@@ -87,26 +100,30 @@ var jTable = (function ($) {
         ;
 
         jqueryMap = {
-            $main    : $main,
+            $main: $main,
+            $table: $table,
+            $options: $main.find('.jTable-options'),
+            $menu: $main.find('.jTable-menu'),
+            $notify  : $main.find('.jTable-notify'),
             $edit    : $main.find('.jTable-edit'),
             $save    : $main.find('.jTable-save'),
             $cancel  : $main.find('.jTable-cancel'),
             $contents: $main.find('.jTable-content'),
-            $table   : $table
+            $editNotify: $main.find('.jTable-notify-edit'),
+            $saveNotify: $main.find('.jTable-notify-save'),
+            $cancelNotify: $main.find('.jTable-notify-cancel')
         };
     };
     // End dom method /setJqueryMap/
     // Begin dom method /addDropDown/
-    addDropDown = function (columnNum, selectedValue) {
+    addDropDown = function (colIndex, selectedValue) {
         var 
             dropDown_HTML = String() + '<select class="' + configMap.cell_edit_class + '">',
-            columns       = settingsMap.dropDownCol,
-            colIndex      = settingsMap.dropDownCol.indexOf(columnNum),
-            values        = settingsMap.dropDownVal[colIndex]
+            columns       = settingsMap.columns
         ;
 
-        if (jQuery.inArray(columnNum, columns) > -1) {
-            dropDown_HTML += addDropDownValues(values, selectedValue);
+            if (columns[colIndex].inputType === $.Utils.inputType.DROPDOWN) {
+                dropDown_HTML += addDropDownValues(columns[colIndex].dropDownValues, selectedValue);
         }
         dropDown_HTML += '</select>';
 
@@ -118,6 +135,11 @@ var jTable = (function ($) {
             value,
             values_HTML = String()
         ;
+
+        if (!$.isArray(values)) {
+            return false;
+        }
+
         for (value in values) {
             values_HTML += '<option value"' + values[value] + '" ' + (selectedValue === values[value] ? 'selected="true"' : '') + '>' + values[value] + '</option>';
         }
@@ -151,7 +173,7 @@ var jTable = (function ($) {
     };
     // End dom method /getEditHTML/
 
-    // Begin dom method /setEditMode/
+    // Begin dom method /toggleEdit/
     toggleEdit = function () {
         if (!stateMap.is_edit_enabled) {
             jqueryMap.$edit.hide();
@@ -165,28 +187,29 @@ var jTable = (function ($) {
         }
         stateMap.is_edit_enabled = stateMap.is_edit_enabled ? false : true;
     };
-    // End dom method /setEditMode/
+    // End dom method /toggleEdit/
+
+    // Begin dom method /toggleFocus/
+    toggleFocus = function () {
+        stateMap.has_focus = stateMap.has_focus ? false : true;
+    }
+    // End dom method /toggleFocus/
 
     // Begin dom method /makeEditTable/
-    makeEditTable = function ($table) {
+    makeEditTable = function ($table, callback) {
         var 
+            innerHTML,
             cell_edit_class = configMap.cell_edit_class,
-            columns = settingsMap.dropDownCol
+            columns = settingsMap.columns            
          ;
 
-        $table.find('td').each(function () {
-            var 
-                $this = $(this),
-                $text = $this.html()
-            ;
-            $this.data("contents", $text);
-            $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $text) : addEditiableDiv($this.html()));
-        });
+        editTd($table.find('td'), 0, callback);
+          
     };
     // End dom method /makeEditTable/
-
+   
     // Begin dom method /removeEditTable/
-    removeEditTable = function ($table, save) {
+    removeEditTable = function ($table, save, callback) {
         var 
             cell_edit_class = configMap.cell_edit_class,
             $prevEditDiv = jqueryMap.$contents.find('.' + cell_edit_class)
@@ -195,19 +218,85 @@ var jTable = (function ($) {
         //remove edit class from all changed cells
         $('.' + configMap.cell_edited_class).removeClass(configMap.cell_edited_class);
 
-        $prevEditDiv.each(function () {
-            var $this = $(this);
-            if (save) {
-                $this.parent().html(getEditValue($this));
-            }
-            else {
-                $this.parent().html($this.parent().data("contents"));
-            }
-        });
+        if (save) {
+            saveTd($prevEditDiv, 0, callback);
+        }
+        else {
+            cancelTd($prevEditDiv, 0, callback);
+        }
     };
     // End dom method /removeEditTable/
+    saveTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var $td = $tdElements.eq(index);
+
+            $td.parent().html(getEditValue($td));
+       
+                saveTd($tdElements, ++index, callback)
+        }
+        else if (callback){
+            callback();
+        }
+    };
+
+    cancelTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var $td = $tdElements.eq(index);
+
+            $td.parent().html($td.parent().data("contents"));
+           
+                cancelTd($tdElements, ++index, callback);
+        }
+        else if (callback){
+            callback();
+        }
+    };
+   
+    editTd = function ($tdElements, index, callback) {
+        if (index < $tdElements.length) {
+            var
+               $td = $tdElements.eq(index),
+               $text = $td.html(),
+               inputType = settingsMap.columns[$td.index()].inputType
+            ;
+
+            $td.data("contents", $text);
+
+            switch (inputType) {
+                case $.Utils.inputType.DROPDOWN:
+                    $td.html(addDropDown($td.index(), $text));
+                    break;
+                case $.Utils.inputType.TEXT:
+                    $td.html(addEditiableDiv($td.html()));
+                    break;
+                default:
+                    break;
+            }
+        
+                editTd($tdElements, ++index, callback);
+        }
+        else if (callback) {
+            callback();
+        }
+    };
     //---------------------- END DOM METHODS ---------------------
     //------------------- BEGIN EVENT HANDLERS -------------------
+    // Begin Event handler /onFocus/
+    onFocus = function (e) {
+        e.stopPropagation();
+        stateMap.has_focus = true;
+        jqueryMap.$table.addClass(configMap.table_focus_class);
+    };
+    // End Event handler /onFocus/
+
+    // Begin Event handler /onBlur/
+    onBlur = function (e) {
+        e.stopPropagation();
+        stateMap.has_focus = false;
+        jqueryMap.$table.removeClass(configMap.table_focus_class);
+    };
+    // End Event handler /onBlur/
+
     // Begin Event handler /onClick/
     onClick = function (e) {
         var 
@@ -219,112 +308,123 @@ var jTable = (function ($) {
     };
     // End Event handler /onClick/
 
-    // Begin Event handler /onDoubleClick/
-    onDoubleClick = function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var 
-            $this = $(this),
-            cell_edit_class = configMap.cell_edit_class,
-            $prevEditDiv = jqueryMap.$contents.find('.' + cell_edit_class),
-            columns = settingsMap.dropDownCol
-        ;
-
-
-        if ($prevEditDiv.length > 0) {
-            $prevEditDiv.parent().html(getEditValue($prevEditDiv));
-        }
-
-        $this.html(jQuery.inArray($this[0].cellIndex, columns) > -1 ? addDropDown($this[0].cellIndex, $this.text()) : addEditiableDiv($this.html()));
-        $this.find('.' + cell_edit_class).focus();
-
-
-    };
-    // End Event handler /onDoubleClick/
-
-    // Begin Event handler /onBlur/
-    onBlur = function (e) {
-
-        var
-            cell_edit_class = configMap.cell_edit_class,
-            $this           = $(this),
-            $prevEditDiv    = $this.find('.' + cell_edit_class)
-        ;
-
-        if ($prevEditDiv.length > 0) {
-            $this.html(getEditValue($prevEditDiv));
-        }
-
-    };
-    // End Event handler /onBlur/
-
     // Begin Event handler /onChange/
     onChange = function () {
         
         var $this = $(this);
         if (!$this.hasClass(configMap.cell_edited_class)) {
             $this.addClass(configMap.cell_edited_class);
-            stateMap.cells_edited.push($this)
+            if (stateMap.cells_edited) {
+                stateMap.cells_edited.push(
+                    {
+                        rowID: $this.data("rowID"),
+                        columnName: settingsMap.columns[$this[0].cellIndex].name,
+                        value: getEditValue($this.find("." + configMap.cell_edit_class))
+                    }
+                );
+            }
         }
     }
     // End Event handler /onChange/
 
     // Begin Event handler /onClickEdit/
     onClickEdit = function (e) {
+        if (!stateMap.isEventHandlerActive) {
+            return;
+        }
+        jqueryMap.$menu.children().andSelf().css("cursor", "progress");
+        stateMap.isEventHandlerActive = false;
         stateMap.cells_edited = [];
-        toggleEdit();
-        makeEditTable(jqueryMap.$table);
+        jqueryMap.$editNotify.show();
+
+        setTimeout(function () {
+            makeEditTable(jqueryMap.$table, function () {
+                toggleEdit();
+                jqueryMap.$editNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 10);
     };
     // End Event handler /onClickEdit/
 
     // Begin Event handler /onClickSave/
     onClickSave = function (e) {
-        toggleEdit();
-        removeEditTable(jqueryMap.$table, true);
+        if (!stateMap.isEventHandlerActive) {
+            return;
+        }
+        jqueryMap.$menu.children().andSelf().css("cursor", "progress");
+        stateMap.isEventHandlerActive = false;
+        jqueryMap.$saveNotify.show();
+        
+        setTimeout(function () {
+            removeEditTable(jqueryMap.$table, true, function () {
+                toggleEdit();
+                jqueryMap.$saveNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 10);
         $.gevent.publish('jTable-saved', [stateMap.cells_edited])
     };
     // End Event handler /onClickSave/
 
     // Begin Event handler /onClickCancel/
     onClickCancel = function (e) {
-        toggleEdit();
-        removeEditTable(jqueryMap.$table, false);
+        if (!stateMap.isEventHandlerActive) {
+            return;
+        }
+        jqueryMap.$menu.children().andSelf().css("cursor", "progress");
+        stateMap.isEventHandlerActive = false;
+        jqueryMap.$cancelNotify.show();
+
+        setTimeout(function () {
+            removeEditTable(jqueryMap.$table, false, function () {
+                toggleEdit();
+                jqueryMap.$cancelNotify.hide();
+                stateMap.isEventHandlerActive = true;
+                jqueryMap.$menu.children().andSelf().css("cursor", "pointer");
+            });
+        }, 10);
     };
     // End Event handler /onClickCancel/
 
     // Begin Event handler /onKeydown/
     onKeydown = function (e) {
-        var keyCodeEnum = {
-            E: {value: 69, code: "E"},
-            S: {value: 83, code: "S"},
-            ESC: { value: 27, code: "ESC"}
-        };
-        if(e.ctrlKey) {
-            switch (e.which) {
-                case (keyCodeEnum.E.value):
-                    {
-                        if (!stateMap.is_edit_enabled) {
-                            e.preventDefault();
-                            onKeyCtrlE(e);
-                            return false;
+        if (stateMap.has_focus){
+            var keyCodeEnum = {
+                E: {value: 69, code: "E"},
+                S: {value: 83, code: "S"},
+                ESC: { value: 27, code: "ESC"}
+            };
+            if(e.ctrlKey) {
+                switch (e.which) {
+                    case (keyCodeEnum.E.value):
+                        {
+                            if (!stateMap.is_edit_enabled) {
+                                e.preventDefault();
+                                onKeyCtrlE(e);
+                                return false;
+                            }
+                            break;
                         }
-                       
-                    }
-                case (keyCodeEnum.S.value):
-                    {
-                        if (stateMap.is_edit_enabled) {
-                            e.preventDefault();
-                            onKeyCtrlS(e);
-                            return false;
+                    case (keyCodeEnum.S.value):
+                        {
+                            if (stateMap.is_edit_enabled) {
+                                e.preventDefault();
+                                onKeyCtrlS(e);
+                                return false;
+                            }
+                            break;
                         }
-                    }
-                default: { break; }
+                    default: { break; }
+                }
             }
-        }
-        else if (e.which == keyCodeEnum.ESC.value) {
-            e.preventDefault();
-            onKeyEsc(e);
-            return false;
+            else if (e.which == keyCodeEnum.ESC.value && stateMap.is_edit_enabled) {
+                e.preventDefault();
+                onKeyEsc(e);
+                return false;
+            }
         }
     }
     // End Event handler /onKeydown/
@@ -349,7 +449,8 @@ var jTable = (function ($) {
     // End Event handler /onKeyEsc/
 
     //-------------------- END EVENT HANDLERS --------------------
-    // Begin public method /configModule/
+    //-------------------- BEGIN PRIVATE METHODS------------------
+    // Begin private method /configModule/
     // Purpose : Adjust configuration of allowed keys
     // Arguments : A map of settable keys and values
     // * color_name - color to use
@@ -367,8 +468,8 @@ var jTable = (function ($) {
         }
         return true;
     };
-    // End public method /configModule/
-    // Begin public method /initModule/
+    // End private method /configModule/
+    // Begin private method /initModule/
     // Purpose : Initializes module
     // Arguments :
     // * $container the jquery element used by this feature
@@ -376,65 +477,124 @@ var jTable = (function ($) {
     // Throws : nonaccidental
     //
     initModule = function ($table) {
+        var
+            $parent = $table.parent(),
+            $element = $(configMap.main_HTML).prependTo($parent)
+        ;
+
+        if ($table.find("caption").length == 0) {
+            $table.prepend("<caption></caption>");
+        }
+
+        $table.find("caption").append(configMap.options_HTML);
+
+        //insert the element into the parent of the table
+        $table.appendTo(
+            $element.find('.jTable-content')
+        );
+
+        stateMap.$container = $element;
+        stateMap.$table = $table;
+        setJqueryMap();
+
+        if (settingsMap.rowUniqueID && settingsMap.rowIDColumnIndex > -1) {
+            $table.find('td').each(function (index) {
+                var
+                    $this = $(this),
+                    row_index = $this.closest("tr").index(),
+                    //col_index = $this.index(),
+                    row_id = $this.siblings().eq(settingsMap.rowIDColumnIndex).text();
+                ;
+
+                $this.data("rowID", row_id);
+
+            });
+        }
+
+        jqueryMap.$table.find("td")
+        .on('click', onClick)
+        .on('change', onChange)
+        .on('input', onChange);
+
+        jqueryMap.$table
+        .on('click', onFocus);
+
+        $(document)
+        .on('click', onBlur);
+
+        jqueryMap.$edit
+        .on('click', onClickEdit);
+
+        jqueryMap.$save
+        .on('click', onClickSave);
+
+        jqueryMap.$cancel
+        .on('click', onClickCancel);
+
+        $(document)
+        .on('keydown', onKeydown);
+
+        return true;
+    };
+    // End private method /initModule/
+    //-------------------- END PRIVATE METHODS--------------------
+    //------------------- BEGIN PUBLIC METHODS ---------------------
+    $.fn.jTable = function (settings_map) {
+        var $table = $(this);
         if ($table[0].nodeName == "TABLE") {
-            var 
-                $parent  = $table.parent(),
-                $element = $(configMap.main_HTML).prependTo($parent)
-            ;
-
-            if ($table.find("caption").length == 0) {
-                $table.prepend("<caption></caption>");
+            if (settings_map){
+                configModule(settings_map);
             }
-
-            $table.find("caption").append(configMap.options_HTML);
-
-            //insert the element into the parent of the table
-            $table.appendTo(
-                $element.find('.jTable-content')
-            );
-
-            stateMap.$container = $element;
-            stateMap.$table = $table;
-            setJqueryMap();
-
-            jqueryMap.$table.find("td")
-            .on('click', onClick)
-            .on('change', onChange)
-            .on('input', onChange);
-            
-
-            //            jqueryMap.$contents.find("td")
-            //            .on('dblclick', onDoubleClick);
-
-            //            jqueryMap.$contents.find("td")
-            //            .on('focusout', onBlur);
-
-            jqueryMap.$edit
-            .on('click', onClickEdit);
-
-            jqueryMap.$save
-            .on('click', onClickSave);
-
-            jqueryMap.$cancel
-            .on('click', onClickCancel);
-
-            $(document)
-            .on('keydown', onKeydown);
-    
-   
-
-            return true;
+            initModule($table);
         }
-        else {
-            return false;
+        return this;
+    };
+
+    $.Utils = {
+        inputType: { TEXT: 0, DROPDOWN: 1, NAN: 3, LENGTH: 4 },
+        makeValuePair: function (columnIndex, value) {
+            var valPair = {
+                columnIndex: value
+            };
+            return valPair;
+        },
+        makeColumn: function (index, name, inputTypeEnum, dropDownValues) {
+            if (index < 0 && typeof index !== "Number") {
+                return false;
+            }
+            if ( inputTypeEnum >= $.Utils.inputType.LENGTH) {
+                return false;
+            }
+            if (inputTypeEnum === $.Utils.inputType.DROPDOWN && !$.isArray(dropDownValues)) {
+                return false;
+            }
+            var colObject = {
+                index: index,
+                name: name,
+                inputType: (typeof inputTypeEnum !== 'undefined' ? inputTypeEnum : $.Utils.inputType.NAN),
+                dropDownValues: dropDownValues
+            };
+            return colObject;
+        },
+        initRow: function (row_id, valuePairsArray) {
+            if (row_id < 0 && typeof row_id !== "Number") {
+                return false;
+            }
+            if (!$.isArray(valuePairsArray)) {
+                return false;
+            }
+            var rowObject = {
+                row_id: row_id,
+                valuePairsArray : valuePairsArray
+            };
+            return rowObject;
         }
     };
-    // End public method /initModule/
     // return public methods
-    return {
-        configModule: configModule,
-        initModule: initModule
-    };
+    //return {
+    //    configModule: configModule,
+    //    jTable: jTable
+    //};
     //------------------- END PUBLIC METHODS ---------------------
 
-})(jQuery);
+})(jQuery, document, window);

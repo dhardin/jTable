@@ -7,14 +7,17 @@
 <script src="js/jTable.js"></script>
 <script>
     $(function () {
-        jTable.configModule({
-            dropDownCol: [0, 2],
-            dropDownVal: [
-                            ["Red", "Green", "Blue"],
-                            ["1", "2", "3", "4"]
-                         ]
-                            });
-        jTable.initModule($('.jTable'));
+        var colIndex = 0;
+        $(".jTable").jTable({
+            columns: [
+                $.Utils.makeColumn(colIndex++, "ID"),
+                $.Utils.makeColumn(colIndex++, "Color", $.Utils.inputType.DROPDOWN, ["Red", "Green", "Blue"]),
+                $.Utils.makeColumn(colIndex++, "Num1", $.Utils.inputType.TEXT),
+                $.Utils.makeColumn(colIndex++, "Num2", $.Utils.inputType.DROPDOWN, ["1", "2", "3", "4"])
+            ],
+            rowUniqueID: true,
+            rowIDColumnIndex: 0
+        });
 
         var $t = $('<div/>');
 
@@ -22,8 +25,10 @@
             var
                 index = 0
             ;
-            for (index = 0; index < cellsChanged.length; index++) {
-                console.log(index + ": " + cellsChanged[index].text());
+
+            for (index = 0; index < cellsChanged.length; index++)
+            {
+                console.log(cellsChanged[index]);
             }
         });
     });
@@ -36,12 +41,15 @@
 <body>
 <table class="jTable">
 <caption>This is a jTable</caption>
-<tr>
-<td>Green</td><td>2</td><td>3</td>
-</tr>
-<tr>
-<td>Red</td><td>5</td><td>2</td>
-</tr>
+    <tr>
+        <th>ID</th><th>Color Dropdown</th><th>Number Input</th><th>Number Dropdown</th>
+    </tr>
+    <tr>
+        <td>1</td><td>Green</td><td>2</td><td>3</td>
+    </tr>
+    <tr>
+        <td>2</td><td>Red</td><td>5</td><td>2</td>
+    </tr>
 </table>
 </body>
 </html>
